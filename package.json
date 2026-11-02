@@ -1,0 +1,10 @@
+{
+  "name": "hof-consultant-performance",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Consultant performance review: contacts assigned and deals created, checked against the HOF compliance rules",
+  "main": "report.js",
+  "scripts": { "start": "node report.js", "test": "node selftest.js" },
+  "engines": { "node": ">=20" },
+  "dependencies": { "exceljs": "^4.4.0" }
+}

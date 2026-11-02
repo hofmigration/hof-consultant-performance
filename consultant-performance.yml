@@ -1,0 +1,65 @@
+name: Consultant performance review
+
+on:
+  workflow_dispatch:
+    inputs:
+      consultants:
+        description: "Names or HubSpot owner ids, separated by commas"
+        required: true
+        default: "Muhammad Shahzad, Muhammad Diean, Fatima Zahid, Ayesha Zahid"
+        type: string
+      period:
+        description: "Which months"
+        required: true
+        default: "Previous 3 months"
+        type: choice
+        options:
+          - Previous 3 months
+          - Previous 2 months
+          - Previous month
+          - Custom dates
+      from_date:
+        description: "Custom dates only: first day, YYYY-MM-DD"
+        required: false
+        default: ""
+        type: string
+      to_date:
+        description: "Custom dates only: last day, YYYY-MM-DD"
+        required: false
+        default: ""
+        type: string
+
+concurrency:
+  group: consultant-performance
+  cancel-in-progress: false
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install --no-audit --no-fund
+      - name: Check the rules still work
+        run: node selftest.js
+      - name: Build and send the review
+        run: node report.js
+        env:
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+          RESEND_KEY: ${{ secrets.RESEND_KEY }}
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          SEND_EMAIL: "true"
+          CONSULTANTS: ${{ inputs.consultants }}
+          PERIOD: ${{ inputs.period }}
+          FROM_DATE: ${{ inputs.from_date }}
+          TO_DATE: ${{ inputs.to_date }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: consultant-performance
+          path: out/
+          retention-days: 7
+          if-no-files-found: ignore
